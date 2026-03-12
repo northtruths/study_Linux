@@ -8,12 +8,14 @@
 char* cmdline = NULL;
 //命令行参数表
 char* argv[50];
-size_t argc;
+int argc = 0;
 //自己的环境变量
 char* my_env[1024];
-int my_env_num;
+int my_env_num = 0;
 //系统环境变量表
  extern char** environ;
+//最后进程的错误码
+int lastcode = 0;
 
 char* my_getenv(const char* name);
 void init_env(char** environ);
@@ -105,6 +107,7 @@ int run_command(){
         execvpe(argv[0], argv, my_env);
         //执行失败
         exit(1);
+        return 0;
     }
     
     if(id){
@@ -117,9 +120,15 @@ int run_command(){
         if(WIFEXITED(status)){
             //子进程正常退出
             if(WEXITSTATUS(status) != 0){
+                lastcode = 5;
                 printf("指令执行失败！\n");
-                return 2;
+                return 0;
             }
+            lastcode = 0;
+            return 0;
+            
+        }else{
+            lastcode = 6;
             return 0;
         }
     }
@@ -133,8 +142,9 @@ bool check_builtin(){
         char cwd[1024];
         if(getcwd(cwd, sizeof(cwd)) != NULL){
             my_setenv("PWD", cwd);
+            lastcode = 0;
         }else{
-            perror("cd命令");
+            lastcode = 1;
         }
         
         return true;
@@ -142,12 +152,7 @@ bool check_builtin(){
     if(strcmp(argv[0], "exit") == 0)
     {
         exit(0);
-        return true;
-    }
-    if(strcmp(argv[0], "myenv") == 0){
-        for(int i = 0; i < my_env_num; ++i){
-            printf("%s\n", my_env[i]);
-        }
+        lastcode = 2;
         return true;
     }
     if(strcmp(argv[0], "export") == 0)
@@ -161,12 +166,29 @@ bool check_builtin(){
         char* value = strtok(NULL, "=");
         //增加的变量没有传值，无效
         if(value == NULL)
+        {
+            lastcode = 4;
             return true;
+        }
         my_setenv(name, value);
+        lastcode = 0;
         free(argv_copy);
         return true;
     }
-
+    if(strcmp(argv[0], "echo") == 0){
+        if(argc > 1){
+            if(strcmp(argv[1], "$?") == 0){
+                printf("%d\n", lastcode);
+            }else{
+                for(int i = 1; i < argc; ++i){
+                    printf("%s ", argv[i]);
+                }
+                printf("\n");
+            }
+            lastcode = 0;
+            return true;
+        }
+    }
     return false;
 }
 
