@@ -4,6 +4,8 @@
 #include<unistd.h>
 #include<sys/wait.h>
 #include<errno.h>
+#include<fcntl.h>
+#include<ctype.h>
 
 char* cmdline = NULL;
 //命令行参数表
@@ -16,6 +18,23 @@ int my_env_num = 0;
  extern char** environ;
 //最后进程的错误码
 int lastcode = 0;
+
+//文件打开方式
+#define NONE         0
+#define INPUT_REDIR  1
+#define OUTPUT_REDIR 2
+#define APPEND_REDIR 3
+
+//重定向方式
+int redir_mode = NONE;
+//重定向文件名
+char *redir_fname = NULL;
+
+#define SKIP_SPACE(pos) do{\
+    while(*pos && isspace(*pos)){\
+        ++pos;\
+    }\
+}while(0)
 
 char* my_getenv(const char* name);
 void init_env(char** environ);
@@ -77,26 +96,89 @@ void get_command(){
 
 }
 
-bool parse_command(){
-    cmdline[strlen(cmdline) - 1] = '\0';
+void reset_commandline(){
     memset(&argv, 0, sizeof(argv));
     argc = 0;
+    redir_mode = NONE;
+    redir_fname = NULL;
+}
+
+void parse_redir(int len){
+    int index = len - 1;
+    while(index >= 0){
+        if(cmdline[index] == '<'){
+            cmdline[index] = 0;
+            cmdline[len - 1] = 0;
+            redir_mode = INPUT_REDIR;
+            redir_fname = cmdline + index + 1;
+            SKIP_SPACE(redir_fname);
+            break;
+        }
+        if(cmdline[index] == '>'){
+            if(index > 1 && cmdline[index - 1] == '>'){
+                cmdline[index] = cmdline[index - 1] = 0;
+                cmdline[len - 1] = 0;
+                redir_mode = APPEND_REDIR;
+                redir_fname = cmdline + index + 1;
+                SKIP_SPACE(redir_fname);
+                break;
+            }
+            else{
+                cmdline[index] = 0;
+                cmdline[len - 1] = 0;
+                redir_mode = OUTPUT_REDIR;
+                redir_fname = cmdline + index + 1;
+                SKIP_SPACE(redir_fname);
+                break;
+            }
+        }
+        --index;
+    }
+    cmdline[len - 1] = 0;
+}
+
+void parse_commandline(){
     argv[argc++] = strtok(cmdline, " ");
     while(argv[argc++] = strtok(NULL, " "));
     --argc;
+}
+
+bool parse_command(){
+
+    reset_commandline();
+    parse_redir(strlen(cmdline));
+    parse_commandline();
+    printf("dirmode:%d ", redir_mode);
+    printf("dirfname:%s\n", redir_fname);
     if(argc == 0)
         return false;
     return true;
 }
 
-void debug(){
-    printf("argv:");
-    for(int i = 0; i < argc; ++i){
-        printf("%s ", argv[i]);
+void do_redir(){
+    if(redir_mode){
+    if(redir_fname == NULL)
+        exit(2);
+    if(redir_mode == INPUT_REDIR){
+        int new_fd = open(redir_fname, O_RDONLY);
+        if(new_fd < 0){
+            exit(2);
+        }
+        dup2(new_fd, 0);
+    }else if(redir_mode == OUTPUT_REDIR){
+        int new_fd = open(redir_fname, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        if(new_fd < 0){
+            exit(2);
+        }
+        dup2(new_fd, 1);
+    }else{
+        int new_fd = open(redir_fname, O_WRONLY | O_CREAT | O_APPEND, 0666);
+        if(new_fd < 0){
+            exit(2);
+        }
+        dup2(new_fd, 1);
     }
-    printf("\n");
-    printf("argc:%d\n", argc);
-
+    }
 }
 
 int run_command(){
@@ -104,6 +186,7 @@ int run_command(){
     id = fork();
     if(id == 0){
         //执行命令
+        do_redir();
         execvpe(argv[0], argv, my_env);
         //执行失败
         exit(1);
@@ -132,6 +215,16 @@ int run_command(){
             return 0;
         }
     }
+}
+
+void debug(){
+    printf("argv:");
+    for(int i = 0; i < argc; ++i){
+        printf("%s ", argv[i]);
+    }
+    printf("\n");
+    printf("argc:%d\n", argc);
+
 }
 
 bool check_builtin(){
