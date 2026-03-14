@@ -92,6 +92,7 @@ void  print_prompt(){
 void get_command(){
     size_t len;
     getline(&cmdline, &len, stdin);
+    cmdline[strlen(cmdline) - 1] = '\0';
     //printf("%s", cmdline);
 
 }
@@ -108,38 +109,34 @@ void parse_redir(int len){
     while(index >= 0){
         if(cmdline[index] == '<'){
             cmdline[index] = 0;
-            cmdline[len - 1] = 0;
             redir_mode = INPUT_REDIR;
-            redir_fname = cmdline + index + 1;
+            redir_fname = &cmdline[index] + 1;
             SKIP_SPACE(redir_fname);
             break;
         }
         if(cmdline[index] == '>'){
             if(index > 1 && cmdline[index - 1] == '>'){
                 cmdline[index] = cmdline[index - 1] = 0;
-                cmdline[len - 1] = 0;
                 redir_mode = APPEND_REDIR;
-                redir_fname = cmdline + index + 1;
+                redir_fname = &cmdline[index] + 1;
                 SKIP_SPACE(redir_fname);
                 break;
             }
             else{
                 cmdline[index] = 0;
-                cmdline[len - 1] = 0;
                 redir_mode = OUTPUT_REDIR;
-                redir_fname = cmdline + index + 1;
+                redir_fname = &cmdline[index] + 1;
                 SKIP_SPACE(redir_fname);
                 break;
             }
         }
         --index;
     }
-    cmdline[len - 1] = 0;
 }
 
 void parse_commandline(){
     argv[argc++] = strtok(cmdline, " ");
-    while(argv[argc++] = strtok(NULL, " "));
+    while((bool)(argv[argc++] = strtok(NULL, " ")));
     --argc;
 }
 
@@ -148,48 +145,51 @@ bool parse_command(){
     reset_commandline();
     parse_redir(strlen(cmdline));
     parse_commandline();
-    printf("dirmode:%d ", redir_mode);
-    printf("dirfname:%s\n", redir_fname);
+    //printf("dirmode:%d ", redir_mode);
+    //printf("dirfname:%s\n", redir_fname);
     if(argc == 0)
         return false;
     return true;
 }
 
 void do_redir(){
+    int new_fd = 0;
     if(redir_mode){
     if(redir_fname == NULL)
-        exit(2);
+        exit(11);
     if(redir_mode == INPUT_REDIR){
-        int new_fd = open(redir_fname, O_RDONLY);
+        new_fd = open(redir_fname, O_RDONLY);
         if(new_fd < 0){
-            exit(2);
+            exit(12);
         }
         dup2(new_fd, 0);
     }else if(redir_mode == OUTPUT_REDIR){
-        int new_fd = open(redir_fname, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        new_fd = open(redir_fname, O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if(new_fd < 0){
-            exit(2);
+            exit(13);
         }
         dup2(new_fd, 1);
     }else{
-        int new_fd = open(redir_fname, O_WRONLY | O_CREAT | O_APPEND, 0666);
+        new_fd = open(redir_fname, O_WRONLY | O_CREAT | O_APPEND, 0666);
         if(new_fd < 0){
-            exit(2);
+            exit(14);
         }
         dup2(new_fd, 1);
     }
     }
+    close(new_fd);
 }
 
 int run_command(){
     pid_t id = 0;
     id = fork();
     if(id == 0){
-        //执行命令
+        //重定向确定
         do_redir();
+        //执行命令
         execvpe(argv[0], argv, my_env);
         //执行失败
-        exit(1);
+        exit(999);
         return 0;
     }
     
@@ -203,7 +203,7 @@ int run_command(){
         if(WIFEXITED(status)){
             //子进程正常退出
             if(WEXITSTATUS(status) != 0){
-                lastcode = 5;
+                lastcode = WEXITSTATUS(status);
                 printf("指令执行失败！\n");
                 return 0;
             }
