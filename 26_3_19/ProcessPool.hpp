@@ -44,7 +44,8 @@ public:
                 return PipeError; // 管道读取失败
             if (flag == 0)
                 break;
-            tl.DoWork(n);
+            if(tl.DoWork(n) < 0)
+                return UsageError;
         }
         exit(0);
     }
@@ -77,7 +78,7 @@ public:
         srand((unsigned)time(NULL));
         while (true)
         {
-            int n = rand() % tl.WorkNum() + 1;
+            int n = rand() % tl.WorkNum();
             write(_chans[count++ % _num].GetWfd(), &n, sizeof(n));
             // 子进程重定向0让可以直接写入，包装
             sleep(1);
@@ -98,7 +99,7 @@ public:
             pid_t pid = waitpid(-1, &status, 0);
             if (pid == -1)
                 return 5; // 回收子进程失败
-            std::cout << "成功回收子进程：" << c.GetWho() << std::endl;
+            std::cout << "成功回收子进程：" << pid << std::endl;
         }
         return 0;
     }

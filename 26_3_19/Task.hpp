@@ -3,7 +3,7 @@
 #include <iostream>
 #include <functional>
 #include <vector>
-#include"Task.hpp"
+#include <unistd.h>
 
 using task = std::function<void()>;
 
@@ -26,12 +26,15 @@ class TaskList
 {
 public:
     TaskList()
-        : tasks({nullptr, work1, work2, work3})
-        , _num(tasks.size() - 1)
+        : tasks({work1, work2, work3})
+        , _num(tasks.size())
     {}
 
-    void DoWork(int n){
+    int DoWork(int n){
+        if(n >= _num)
+            return 0;
         tasks[n]();
+        return 0;
     }
 
     int WorkNum(){
