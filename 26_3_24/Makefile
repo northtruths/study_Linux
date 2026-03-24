@@ -7,5 +7,11 @@ A:A.cc
 B:B.cc
 	g++ -o $@ $^
 
+signal:Signal.cc
+	g++ -o $@ $^
+
 clean:
-	rm A B
+	rm A B signal
+
+
+
