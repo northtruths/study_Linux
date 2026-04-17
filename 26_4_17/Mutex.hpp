@@ -87,6 +87,6 @@ namespace mutex_module
         }
     private:
         Mutex& _lock;
-        bool _islocked;//是否有锁
+        bool _islocked;//对锁的控制权
     };
 }
