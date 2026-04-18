@@ -1,7 +1,7 @@
 #pragma once
 
 #include <mutex>
-#include"Cond.hpp"//头文件相互包含，暂时不解决
+#include"Cond.hpp"
 
 namespace mutex_module
 {
