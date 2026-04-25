@@ -89,6 +89,12 @@ namespace threadpool_module
             }
         }
 
+        void wait(){
+            for(auto& t : _tread_group){
+                t.wait();
+            }
+        }
+
     private:
         int _treadnum;
         bool _isrunning;
