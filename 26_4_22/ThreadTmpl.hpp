@@ -1,5 +1,5 @@
 // pthtead线程封装
-// 无模版无需传参版，参数在外部函数
+//有模板传参版，必须传入参数
 #pragma once
 
 #include <pthread.h>
@@ -9,12 +9,14 @@
 #include <sys/types.h>
 #include <unistd.h>
 
- 
+// 创建、销毁、wait、push任务（functional）,start,stop,data(name),分离
 namespace thread_module
 {
-    class ThreadPlain
+
+    template <class T>
+    class ThreadTmpl 
     {
-        using fun_t = std::function<void()>;
+        using fun_t = std::function<void(const T &)>;
         static int number; // 线程编号
 
         enum class STATUS
@@ -26,20 +28,22 @@ namespace thread_module
 
         static void *thread_func(void *arg)
         {
-            ThreadPlain *thread = static_cast<ThreadPlain *>(arg);
+            ThreadTmpl<T> *thread = static_cast<ThreadTmpl<T> *>(arg);
             thread->_status = STATUS::RUNNING;
-            thread->_task();
+            while (thread->_status == STATUS::RUNNING)
+                thread->_task(thread->_data);
+
             return nullptr;
         }
 
     public:
-        //线程构造（未实例创建，需启动），参数first为线程函数
-        ThreadPlain(fun_t task) : _task(task),  _status(STATUS::NEW), _is_detach(false)
+        // 线程构造（未实例创建，需启动），参数first为线程函数，second为用户任务的传参数据
+        ThreadTmpl(fun_t task, const T &data = T()) : _task(task), _data(data), _status(STATUS::NEW), _is_detach(false)
         {
             _ptname = "pthread-" + std::to_string(number++);
             _pid = getpid();
         }
-        ~ThreadPlain() {}
+        ~ThreadTmpl() {}
 
         bool start()
         {
@@ -90,6 +94,7 @@ namespace thread_module
 
     private:
         fun_t _task;
+        T _data;
         STATUS _status;
         bool _is_detach;
 
@@ -97,22 +102,22 @@ namespace thread_module
         std::string _ptname;
         pid_t _pid;
     };
-    int ThreadPlain::number = 1;
 
-
-
+    template <typename T>
+    int ThreadTmpl<T>::number = 1;
 
     // RAII管理线程对象
-    class ThreadPlainGuard
+    template <typename T>
+    class ThreadTmplGuard
     {
-        using fun_t = std::function<void()>;
+        using fun_t = std::function<void(const T &)>;
     public:
-        ThreadPlainGuard(fun_t task) : _t(task), _is_wait(false)
+        ThreadTmplGuard(fun_t task, const T &data = T()) : _t(task, data), _is_wait(false)
         {
             _t.start();
         }
 
-        ~ThreadPlainGuard()
+        ~ThreadTmplGuard()
         {
             _t.cancel();
             if (!_is_wait)
@@ -146,7 +151,7 @@ namespace thread_module
         }
 
     private:
-        ThreadPlain _t;
+        LoopingThread<T> _t;
         bool _is_wait;
     };
 }
