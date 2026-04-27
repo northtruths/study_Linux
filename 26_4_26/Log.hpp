@@ -66,9 +66,9 @@ namespace log_module
     private:
         std::shared_ptr<LogStrategy> _strategy; // 使用的刷新策略
     };
-    extern Logger log;
+    extern log_module::Logger log;
 
-#define LOG(loglevel) log(loglevel, __FILE__, __LINE__)
-#define ENABLE_CONSOLE_LOG_STRATEGY() log.EnableConsoleLog()
-#define ENABLE_FILE_LOG_STRATEGY() log.EnableFileLog()
+#define LOG(loglevel) log_module::log(loglevel, __FILE__, __LINE__)
+#define ENABLE_CONSOLE_LOG_STRATEGY() log_module::log.EnableConsoleLog()
+#define ENABLE_FILE_LOG_STRATEGY() log_module::log.EnableFileLog()
 }
