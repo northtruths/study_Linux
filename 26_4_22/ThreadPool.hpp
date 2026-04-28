@@ -56,7 +56,7 @@ namespace threadpool_module
     public:
         ThreadPool(int num) : _treadnum(num), _isrunning(true)
         {
-            _tread_group.reserve(_treadnum);
+            _thread_group.reserve(_treadnum);
             for (int i = 1; i <= _treadnum; ++i)
             {
                 _tread_group.emplace_back(std::bind(&ThreadPool<T>::thread_task, this, "worker-" + std::to_string(i)));
