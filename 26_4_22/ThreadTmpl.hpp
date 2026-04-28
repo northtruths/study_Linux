@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sys/types.h>
 #include <unistd.h>
+#include"Log.hpp"
 
 // 创建、销毁、wait、push任务（functional）,start,stop,data(name),分离
 namespace thread_module
@@ -52,10 +53,12 @@ namespace thread_module
                 int n = pthread_create(&_pt, nullptr, thread_func, this);
                 if (n)
                 {
+                    LOG(log_module::LogLevel::ERROR) << "start: 线程创建失败";
                     return false;
                 }
                 return true;
             }
+            LOG(log_module::LogLevel::WARNING) << "start: 线程状态并非新建(NEW)";
             return false;
         }
 
@@ -66,6 +69,7 @@ namespace thread_module
                 _status = STATUS::STOP;
                 return true;
             }
+            LOG(log_module::LogLevel::WARNING) << "cancle: 线程状态并非运行(RUNNING)";
             return false;
         }
 
@@ -151,7 +155,7 @@ namespace thread_module
         }
 
     private:
-        LoopingThread<T> _t;
+        ThreadTmpl<T> _t;
         bool _is_wait;
     };
 }

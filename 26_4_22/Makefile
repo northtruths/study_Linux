@@ -1,10 +1,17 @@
 .PHONY:clean
+CXXFLAGS = -std=c++17
+SRCS = Log.cc Pool_test.cc
+OBJS = $(SRCS:.cc=.o)
 
-test_tp: ThreadPool.cc
+
+ptest: $(OBJS) 
 	g++ $^ -o $@ -lpthread
 
-test: tread_test.cc
-	g++ $^ -o $@ -lpthread
+%.o: %.cc
+	g++ -c $(CXXFLAGS) $< -o $@ -lpthread
 
+test: tread_test.cc Log.cc
+	g++ $(CXXFLAGS) $^ -o $@ 
+	
 clean:
-	rm test test_tp
+	rm -r test ptest $(OBJS) log
