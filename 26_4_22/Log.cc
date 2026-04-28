@@ -17,7 +17,6 @@ namespace log_module
     const std::string defaultpath = "./log/";
     const std::string defaultname = "log.txt";
 
-
     // 控制台刷新策略
     class ConsoleLogStrategy : public LogStrategy
     {
@@ -89,7 +88,7 @@ namespace log_module
         return buf;
     }
 
-   std::string Logger::LogMessage::level_tostr()
+    std::string Logger::LogMessage::level_tostr()
     {
         switch (_level)
         {
@@ -133,5 +132,9 @@ namespace log_module
         return Logger::LogMessage(level, filename, line, *this);
     }
 
-    Logger log;
+    Logger &GetLogger()
+    {
+        static Logger log;
+        return log;
+    }
 }
