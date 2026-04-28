@@ -54,12 +54,12 @@ namespace threadpool_module
         }
 
     public:
-        ThreadPool(int num) : _treadnum(num), _isrunning(true)
+        ThreadPool(int num) : _threadnum(num), _isrunning(true)
         {
-            _thread_group.reserve(_treadnum);
-            for (int i = 1; i <= _treadnum; ++i)
+            _thread_group.reserve(_threadnum);
+            for (int i = 1; i <= _threadnum; ++i)
             {
-                _tread_group.emplace_back(std::bind(&ThreadPool<T>::thread_task, this, "worker-" + std::to_string(i)));
+                _thread_group.emplace_back(std::bind(&ThreadPool<T>::thread_task, this, "worker-" + std::to_string(i)));
             }
             LOG(log_module::LogLevel::DEBUG) << "构造结束";
         }
@@ -101,7 +101,7 @@ namespace threadpool_module
 
         void wait()
         {
-            for (auto &t : _tread_group)
+            for (auto &t : _thread_group)
             {
                 t.wait();
             }
@@ -109,12 +109,12 @@ namespace threadpool_module
         }
 
     private:
-        int _treadnum;
+        int _threadnum;
         bool _isrunning;
 
         std::queue<task_t> _task_queue;
         std::queue<T> _data_queue;
-        std::vector<thread_module::ThreadPlainGuard> _tread_group;
+        std::vector<thread_module::ThreadPlainGuard> _thread_group;
         mutex_module::Mutex _mutex;
         cond_module::Cond _cond;
     };
