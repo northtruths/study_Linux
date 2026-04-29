@@ -85,6 +85,7 @@ namespace threadpool_module
 
         bool stop()
         {
+            mutex_module::FlexibleLock lock(_mutex);
             if (_isrunning)
             {
                 _isrunning = false;
