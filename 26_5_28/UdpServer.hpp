@@ -20,7 +20,7 @@ public:
     ~UdpServer() {}
     void init()
     {
-        int fd_socket_ = socket(AF_INET, SOCK_DGRAM, 0);
+        fd_socket_ = socket(AF_INET, SOCK_DGRAM, 0);
         if (fd_socket_ == -1)
         {
             LOG(LogLevel::FATAL) << "socket建立失败!";
@@ -35,13 +35,14 @@ public:
     }
     void start()
     {
-        char buff[1024] = {};
         struct sockaddr_in temp = {};
-        socklen_t len = sizeof(temp);
         while (running)
         {
+            socklen_t len = sizeof(temp);
+            char buff[1024] = {};
             int n = recvfrom(fd_socket_, &buff, sizeof(buff), 0, (sockaddr *)&temp, &len);
-            if(n = -1){
+            if(n == -1){
+                perror("recvfrom error");
                 LOG(LogLevel::WARNING) << "客户端信息接受失败";
             }
             buff[n] = 0;
