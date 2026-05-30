@@ -19,14 +19,14 @@ class InetAddr{
     }
 
 public:
-    InetAddr(sockaddr_in addr)//客户端
+    InetAddr(sockaddr_in addr)
         :addr_(addr)
     {
         ip_ntoh();
         port_ntoh();
     }
 
-    InetAddr(uint16_t port)//服务端
+    InetAddr(uint16_t port)
         :port_(port)
     {
         memset(&addr_, 0, sizeof(addr_));
@@ -34,6 +34,16 @@ public:
         addr_.sin_port = htons(port_);
         addr_.sin_addr.s_addr = INADDR_ANY;
     }
+
+    InetAddr(std::string ip, uint16_t port)
+        :ip_(ip), port_(port)
+    {
+        memset(&addr_, 0, sizeof(addr_));
+        addr_.sin_family = AF_INET;
+        addr_.sin_port = htons(port_);
+        addr_.sin_addr.s_addr = inet_addr(ip_.c_str());
+    }
+    
     ~InetAddr(){}
 
     in_addr_t IP_INET(){
@@ -52,7 +62,10 @@ public:
         return addr_;
     }
 private:
+    //网络序列
     sockaddr_in addr_;
+
+    //主机序列
     std::string ip_;
     uint16_t port_;
 };
