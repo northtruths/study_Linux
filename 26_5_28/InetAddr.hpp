@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include<string>
+#include<cstring>
 
 
 class InetAddr{
@@ -28,6 +29,7 @@ public:
     InetAddr(uint16_t port)//服务端
         :port_(port)
     {
+        memset(&addr_, 0, sizeof(addr_));
         addr_.sin_family = AF_INET;
         addr_.sin_port = htons(port_);
         addr_.sin_addr.s_addr = INADDR_ANY;
