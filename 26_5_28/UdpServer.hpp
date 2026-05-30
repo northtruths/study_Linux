@@ -47,8 +47,13 @@ public:
             }
             buff[n] = 0;
             InetAddr client_addr(temp);
-            std::string client_info = client_addr.IP_HOST() + ":" + std::to_string(client_addr.PORT_HOST()) +  " - " + buff;
-            std::cout << "client say:" << client_info << std::endl;
+            
+            std::string client_info = client_addr.IP_HOST() + ":" + std::to_string(client_addr.PORT_HOST());
+            std::cout << client_info << " say: " << buff << std::endl;
+
+            std::string back = "server back: " ;
+            back += buff;
+            sendto(fd_socket_, back.c_str(), back.size(), 0, (sockaddr*)&client_addr.sockaddr(), (socklen_t)sizeof(client_addr.sockaddr()));
         }
     }
 
