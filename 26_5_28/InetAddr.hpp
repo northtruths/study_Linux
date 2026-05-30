@@ -37,7 +37,7 @@ public:
     in_addr_t IP_INET(){
         return inet_addr(ip_.c_str());
     }
-    std::string IP_HOST(){
+    std::string& IP_HOST(){
         return ip_;
     }
     uint16_t PORT_HOST(){
@@ -46,7 +46,9 @@ public:
     in_port_t PORT_INET(){
         return addr_.sin_port;
     }
-
+    sockaddr_in& sockaddr(){
+        return addr_;
+    }
 private:
     sockaddr_in addr_;
     std::string ip_;
