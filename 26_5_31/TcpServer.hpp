@@ -6,12 +6,12 @@
 #include <sys/socket.h>
 #include <cstring>
 #include <functional>
-#include<string>
-#include<iostream>
+#include <string>
+#include <iostream>
 
 using namespace log_module;
 
-using Task = std::function<void (std::string)>;
+using Task = std::function<void(std::string)>;
 uint16_t gport = 8888;
 
 class TcpServer
@@ -19,22 +19,24 @@ class TcpServer
 
     void handle(Task task, std::string client_data, InetAddr client_addr, int client_fd)
     {
-        if(task){
-
-        }else{
-            //默认任务
+        if (task)
+        {
+        }
+        else
+        {
+            // 默认任务
             std::cout << client_addr.IP_HOST() << ':' << client_addr.PORT_HOST() << " say: ";
             std::cout << client_data;
 
-            std::string rbuff = "echo#" + client_data;
+            std::string rbuff = "server say: " + client_data;
+            // LOG(LogLevel::DEBUG) << "服务端接收数据为: " << client_data;
             send(client_fd, rbuff.c_str(), rbuff.size(), 0);
         }
-
     }
-    
+
 public:
     TcpServer(Task task = nullptr, uint16_t port = gport)
-        :task_(task), server_addr_(port)
+        : task_(task), server_addr_(port)
     {
     }
 
@@ -47,6 +49,7 @@ public:
         }
         bind(listen_fd_, (sockaddr *)&server_addr_.sockaddr(), sizeof(server_addr_.sockaddr()));
         listen(listen_fd_, 10);
+        LOG(LogLevel::INFO) << "开始listen... listen_fd: " << listen_fd_;
     }
 
     void start()
@@ -62,15 +65,24 @@ public:
                 LOG(LogLevel::FATAL) << "accept失败";
             }
             InetAddr client_addr(temp);
-            char buff[1024];
-            recv(client_fd, &buff, sizeof(buff), 0);
+            LOG(LogLevel::INFO) << "accepted: " << client_addr.IP_HOST() << ':' << client_addr.PORT_HOST() << " client_fd: " << client_fd;
 
-            //处理
-            handle(task_, buff, client_addr, client_fd);
+            while (true)
+            {
+                char buff[1024];
+                int n = recv(client_fd, buff, sizeof(buff), 0);
+                if (n == 0)
+                    break;
+                if (n < 0)
+                {
+                    LOG(LogLevel::ERROR) << "recv failure";
+                }
+                buff[n] = 0;
+                // 处理
+                handle(task_, buff, client_addr, client_fd);
+            }
         }
     }
-
-
 
     ~TcpServer() {}
 
