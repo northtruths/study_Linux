@@ -34,7 +34,7 @@ class TcpServer
     
 public:
     TcpServer(Task task = nullptr, uint16_t port = gport)
-        :task_(task), server_addr_(port), running(true)
+        :task_(task), server_addr_(port)
     {
     }
 
@@ -77,7 +77,7 @@ public:
 private:
     Task task_;
     InetAddr server_addr_;
-    bool running = false;
 
     int listen_fd_ = -1;
+    bool running_ = true;
 };
