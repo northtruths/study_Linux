@@ -8,6 +8,7 @@
 #include <functional>
 #include <string>
 #include <iostream>
+#include <unistd.h>
 
 using namespace log_module;
 
@@ -52,6 +53,40 @@ public:
         LOG(LogLevel::INFO) << "开始listen... listen_fd: " << listen_fd_;
     }
 
+    // 单执行流版
+    //  void start()
+    //  {
+    //      while (true)
+    //      {
+    //          struct sockaddr_in temp;
+    //          memset(&temp, 0, sizeof(temp));
+    //          socklen_t len = sizeof(temp);
+    //          int client_fd = accept(listen_fd_, (sockaddr *)&temp, &len);
+    //          if (client_fd < 0)
+    //          {
+    //              LOG(LogLevel::FATAL) << "accept失败";
+    //          }
+    //          InetAddr client_addr(temp);
+    //          LOG(LogLevel::INFO) << "accepted: " << client_addr.IP_HOST() << ':' << client_addr.PORT_HOST() << " client_fd: " << client_fd;
+
+    //         while (true)
+    //         {
+    //             char buff[1024];
+    //             int n = recv(client_fd, buff, sizeof(buff), 0);
+    //             if (n == 0)
+    //                 break;
+    //             if (n < 0)
+    //             {
+    //                 LOG(LogLevel::ERROR) << "recv failure";
+    //             }
+    //             buff[n] = 0;
+    //             // 处理
+    //             handle(task_, buff, client_addr, client_fd);
+    //         }
+    //     }
+    // }
+
+    // 多进程版
     void start()
     {
         while (true)
@@ -64,23 +99,37 @@ public:
             {
                 LOG(LogLevel::FATAL) << "accept失败";
             }
-            InetAddr client_addr(temp);
-            LOG(LogLevel::INFO) << "accepted: " << client_addr.IP_HOST() << ':' << client_addr.PORT_HOST() << " client_fd: " << client_fd;
-
-            while (true)
+            pid_t pid = fork();
+            if (pid == -1)
             {
-                char buff[1024];
-                int n = recv(client_fd, buff, sizeof(buff), 0);
-                if (n == 0)
-                    break;
-                if (n < 0)
-                {
-                    LOG(LogLevel::ERROR) << "recv failure";
-                }
-                buff[n] = 0;
-                // 处理
-                handle(task_, buff, client_addr, client_fd);
+                LOG(LogLevel::FATAL) << "fork失败";
             }
+            // 子进程会继承与客户端的通信fd，父进程不再需要此fd需要关闭
+
+            // 子进程
+            if (pid == 0)
+            {
+
+                InetAddr client_addr(temp);
+                LOG(LogLevel::INFO) << "accepted: " << client_addr.IP_HOST() << ':' << client_addr.PORT_HOST() << " client_fd: " << client_fd;
+                while (true)
+                {
+                    char buff[1024];
+                    int n = recv(client_fd, buff, sizeof(buff), 0);
+                    if (n == 0)
+                        break;
+                    if (n < 0)
+                    {
+                        LOG(LogLevel::ERROR) << "recv failure";
+                    }
+                    buff[n] = 0;
+                    // 处理
+                    handle(task_, buff, client_addr, client_fd);
+                }
+            }
+
+            // 父进程
+            close(client_fd);
         }
     }
 
