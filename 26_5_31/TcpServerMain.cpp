@@ -1,7 +1,9 @@
 
 #include "TcpServer.hpp"
+#include <signal.h>
 
 int main(){
+    signal(SIGCHLD, SIG_IGN);
     TcpServer ts;
 
     //1.初始化服务器

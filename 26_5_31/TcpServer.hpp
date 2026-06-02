@@ -104,12 +104,12 @@ public:
             {
                 LOG(LogLevel::FATAL) << "fork失败";
             }
-            // 子进程会继承与客户端的通信fd，父进程不再需要此fd需要关闭
+            // 子进程会继承与客户端的通信fd，父进程不再需要与客户端的通信fd，子进程不需要父进程的监听fd
 
             // 子进程
             if (pid == 0)
             {
-
+                close(listen_fd_);
                 InetAddr client_addr(temp);
                 LOG(LogLevel::INFO) << "accepted: " << client_addr.IP_HOST() << ':' << client_addr.PORT_HOST() << " client_fd: " << client_fd;
                 while (true)
@@ -126,6 +126,8 @@ public:
                     // 处理
                     handle(task_, buff, client_addr, client_fd);
                 }
+                close(client_fd);
+                exit(0);
             }
 
             // 父进程
