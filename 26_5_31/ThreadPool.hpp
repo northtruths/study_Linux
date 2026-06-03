@@ -16,7 +16,7 @@ namespace threadpool_module
     template <typename T>
     class ThreadPool
     {
-        using task_t = std::function<void(const T &)>;
+        using task_t = std::function<void()>;
 
         // 再底层才是真正的线程函数，所以这只是任务函数，不需要线程函数的格式
         void thread_task(std::string name)
@@ -43,7 +43,7 @@ namespace threadpool_module
                     _data_queue.pop();
                 }
                 LOG(log_module::LogLevel::DEBUG) << name << " thread_task: 开始工作";
-                t(d);
+                t();
                 LOG(log_module::LogLevel::DEBUG) << name << " thread_task: 工作结束";
             }
         }
