@@ -155,6 +155,13 @@ namespace protocol_module
             return result_;
         }
 
+        void set_state(int state){
+            state_ = state;
+        }
+
+        void set_result(int result){
+            result_ = result;
+        }
     private:
         int state_; // 状态码，0为有效
         int result_;
