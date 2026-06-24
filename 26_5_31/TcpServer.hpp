@@ -140,6 +140,8 @@ public:
 
     void handle(struct sockaddr_in temp, int client_fd)
     {
+        if(task_ == nullptr)
+            return;
         InetAddr client_addr(temp);
         LOG(LogLevel::INFO) << "accepted: " << client_addr.IP_HOST() << ':' << client_addr.PORT_HOST() << " client_fd: " << client_fd;
         std::string buffer;
@@ -157,7 +159,7 @@ public:
             buffer += temp;
             // 处理
             std::string msg;
-            if(task(msg, buffer)){
+            if(task_(msg, buffer)){
                 send(client_fd, msg.c_str(), msg.size(), 0);
             }
         }
