@@ -156,6 +156,7 @@ public:
                 LOG(LogLevel::ERROR) << "recv failure";
             }
             temp[n] = 0;
+            
             buffer += temp;
             // 处理
             std::string msg;
