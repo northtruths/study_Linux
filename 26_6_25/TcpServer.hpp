@@ -28,6 +28,7 @@ public:
 
     void start()
     {
+        LOG(LogLevel::DEBUG) << "TcpServer fd: " << listen_socket_.get_fd() << "开始运行";
         running_ = true;
         while (running_)
         {
@@ -52,6 +53,7 @@ public:
                     ::exit(0);
                 }
                 // 分离了孙子孤儿进程，可以单独进行IO和业务处理，不阻塞父进程
+                LOG(LogLevel::DEBUG) << "开始接收信息, fd: " << client_socket->get_fd();
                 task_(client_socket, client_addr);
                 ::exit(0);
             }
