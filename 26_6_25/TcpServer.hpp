@@ -15,10 +15,10 @@ using Task = std::function<void (const SockPtr&, const InetAddr&)>;
 class TcpServer
 {
 public:
-    TcpServer(Task task)
+    TcpServer(Task task, uint16_t port)
         : running_(false), task_(task)
     {
-        listen_socket_.build_tcpserver();
+        listen_socket_.build_tcpserver(port);
     }
 
     void start()
