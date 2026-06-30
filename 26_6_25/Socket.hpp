@@ -23,7 +23,7 @@ public:
     virtual bool bind_socket(uint16_t port) = 0;
     virtual bool listen_socket() = 0;
     virtual SockPtr accept_socket(InetAddr &out_client) = 0;
-    virtual ssize_t send_socket(int cilent_fd, const std::string &msg) = 0;
+    virtual ssize_t send_socket(const std::string &msg) = 0;
     virtual int recv_socket(std::string *out) = 0;
     virtual bool close_socket() = 0;
     virtual int get_fd() = 0;
@@ -133,9 +133,9 @@ public:
         return std::make_shared<TcpSocket>(client_fd);
     }
 
-    virtual ssize_t send_socket(int client_fd, const std::string &msg) override
+    virtual ssize_t send_socket(const std::string &msg) override
     {
-        return send(client_fd, msg.c_str(), msg.size(), 0);
+        return send(fd_, msg.c_str(), msg.size(), 0);
     }
 
     virtual int recv_socket(std::string *out) override
