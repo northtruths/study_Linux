@@ -73,6 +73,7 @@ public:
             return false;
         }
         LOG(LogLevel::DEBUG) << "socket 创建成功: " << fd_;
+        return true;
     }
 
     virtual bool set_socket() override
@@ -102,6 +103,7 @@ public:
             LOG(LogLevel::ERROR) << "bind 失败";
             return false;
         }
+        return true;
     }
 
     virtual bool listen_socket() override
@@ -117,6 +119,7 @@ public:
             LOG(LogLevel::ERROR) << "listen 失败";
             return false;
         }
+        return true;
     }
 
     virtual SockPtr accept_socket(InetAddr &out_client) override
@@ -169,6 +172,7 @@ public:
             return false;
         }
         ::close(fd_);
+        return true;
     }
     virtual int get_fd() override
     {
